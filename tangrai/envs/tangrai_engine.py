@@ -153,3 +153,31 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'I': I_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
+
+shape = random.choice(list(PIECES.keys()))
+print(random.randint(0, len(PIECES[shape]) - 1))
+print(PIECES[0])
+
+
+A=['OOOOOO....',
+   'OOOOOO....',
+   'OOOOO.....',
+   'OOOO......',
+   'OOO.......',
+   'OO........',
+   'O.........',
+   '..........',
+   '..........',
+   '..........']
+
+import numpy as np
+Q=np.ones((10,10))
+x=5
+y=3
+for row in range(len(A[0])):
+    for column in range(len(A[0])):
+        if A[row][column]!='.':
+            try:
+                Q[row+x][column+y]=6
+            except:
+                print('NO!')
