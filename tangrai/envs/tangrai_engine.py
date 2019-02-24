@@ -147,6 +147,7 @@ class GameState:
         self.currentPiece = None
 #        pygame.display.update()
         self.str_board=[]
+        self.trainX=[]
     def reinit(self):
         self.board = self.getBlankBoard()
         self.currentPiece = None
@@ -194,6 +195,7 @@ class GameState:
     def addToBoard(self,shape):
         self.currentPiece = self.getNewPiece(shape)
         if self.isValidPosition()==True:
+            print(self.currentPiece['shape'],self.currentPiece['x'],self.currentPiece['y'])
             for row in range(templeteWidth):
                 for column in range(templeteHeigh):
                     if pieces[self.currentPiece['shape']][self.currentPiece['rotation']][row][column]!=blank:
@@ -201,7 +203,11 @@ class GameState:
                             self.board[row+self.currentPiece['x']][column+self.currentPiece['y']]=self.currentPiece['color']
                         except:
                             pass
-     
+        else:
+            print('Non Valid Position')
+        self.trainX=np.append(self.trainX,self.currentPiece['x'])
+        self.trainX=np.append(self.trainX,self.currentPiece['y'])
+
     def getBlankBoard(self):
         self.board = []
         for i in range(boardWidth):
@@ -255,6 +261,9 @@ class GameState:
             self.convertToIntBoard()
             board=self.int_board
             done=True
+            self.traiX=np.reshape(self.trainX,(int(len(self.trainX)/2),2))
+            
+            self.trainX=[]
         else:
             self.addToBoard(list(pieces)[action])
             self.convertToIntBoard()

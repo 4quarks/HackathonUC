@@ -7,7 +7,10 @@ from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-
+import keras
+import time
+import matplotlib.pyplot as plt
+        
 
 class DQNAgent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
@@ -43,16 +46,18 @@ class DQNAgent():
     
     def NN_model(self):
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='tanh'))
-        model.add(Dense(48, activation='tanh'))
-        model.add(Dense(self.action_size, activation='linear'))
+        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(48, activation='relu'))
+        model.add(Dense(self.action_size, activation='relu'))
         model.compile(loss='mse',
-                      optimizer=Adam(lr=self.learning_rate, decay=self.alpha_decay))
+                      optimizer=Adam(lr=self.learning_rate, decay=self.alpha_decay),metrics=['mse'])
         return model
     
     def act(self, state):
         if(np.random.random() <= self.epsilon):
             return self.env.action_space.sample()
+        state =  state.flatten()
+        state=np.reshape(state,(1,100))   
         return np.argmax(self.model.predict(state))
     
     def remember(self, state, action, reward, next_state, done):
@@ -69,28 +74,30 @@ class DQNAgent():
             next_state =  next_state.flatten()
             next_state=np.reshape(next_state,(1,100))
             
+            
             y_target = self.model.predict(state)
             y_target[0][action] = reward if done else reward + self.gamma * np.max(self.model.predict(next_state)[0])
             x_batch.append(state[0])
             y_batch.append(y_target[0])
             
-        self.model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch), verbose=0)
+        history=self.model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch),verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
             
+        
     def train(self):
 #        state_space=self.env.observation_space.n
         
         for episode in range(self.episodes):
             state=self.env.reset()
             
-            done=True
+            done=False
             counter_steps=0
             score=0
             print('######')
             for _ in range (self.env._max_episode_steps):
                 action_space=self.act(state)
-                next_state, reward, done, _ = self.env.step(action_space)
+                next_state, reward, done, _ = self.env.step(counter_steps)
                 
                 self.remember(state, action_space, reward, next_state, done)
                 
@@ -102,7 +109,13 @@ class DQNAgent():
                 score += reward
                 print(score)
                 state = next_state
+                
+                plt.imshow(state)
+                plt.show()
+                
+                
                 if counter_steps==7:
+                    #time.sleep(2)
                     done=True
                     break
                 else:
@@ -110,18 +123,20 @@ class DQNAgent():
                     
         self.model.save_weights('model/model_RL.h5')
 
+
+
 if __name__ == "__main__":           
     agent= DQNAgent(env_id='TangrAI-v0', 
                     path='model/', 
-                    episodes=1000, 
+                    episodes=50000, 
                     max_env_steps=7, 
                     win_threshold=None, 
                     epsilon_decay=1,
                     state_size=None, 
                     action_size=None, 
-                    epsilon=1.0, 
+                    epsilon=0.6, 
                     epsilon_min=0.01, 
-                    gamma=1, 
+                    gamma=0.80, 
                     learning_rate=.001, 
                     alpha_decay=.01, 
                     batch_size=16, 
@@ -130,23 +145,3 @@ if __name__ == "__main__":
     
     agent.train()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
