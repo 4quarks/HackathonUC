@@ -153,7 +153,7 @@ class GameState:
 #        pygame.display.update()
         
     def getActionSet(self):
-        return range(7)    
+        return range(8)    
     
     def getReward(self):
         counter_ones=0
@@ -188,12 +188,12 @@ class GameState:
                                     valid = True
                                 else:
                                     valid = False   
-        print(valid)
+        print('Valid position to insert? ',valid)
         return valid     
     
     def addToBoard(self,shape):
         self.currentPiece = self.getNewPiece(shape)
-        print(self.currentPiece)
+        print('Current Piece',self.currentPiece)
         if self.isValidPosition()==True:
             for row in range(templeteWidth):
                 for column in range(templeteHeigh):
@@ -239,14 +239,18 @@ class GameState:
         self.str_board=np.reshape(self.str_board,(templeteWidth,templeteHeigh))
         return self.str_board           
 
-    def frame_step(self):
+    def frame_step(self,action):
         done=False
-        for piece in pieces:
-            self.addToBoard(piece)
+        if action==7:
+            board=self.getBlankBoard()
+            done=True
+        else:
+            self.addToBoard(list(pieces)[action])
+            self.convertToStrBoard()
+            board=self.str_board
         
         reward=self.getReward()
-        board=self.str_board
-        done=True
+        
         
         return board, reward, done
 

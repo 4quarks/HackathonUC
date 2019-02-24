@@ -15,7 +15,7 @@ env=gym.make('TangrAI-v0')
 class DQNAgent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
                  state_size=None, action_size=None, epsilon=1.0, epsilon_min=0.01, 
-                 gamma=1, learning_rate=.001, alpha_decay=.01, batch_size=16, prints=False):
+                 gamma=1.0, learning_rate=.001, alpha_decay=.01, batch_size=16, prints=False):
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_id)
         if state_size is None: 
@@ -91,12 +91,16 @@ class DQNAgent():
                 # Else take a random action
                 else:
                     action = self.env.action_space.sample()
+                    print('action',action)
                 # Step the game forward
                 next_state, reward, done, _ = self.env.step(action)
+                print('next_state',next_state)
+                print('reward',reward)
+                print('done',done)
                 # Add up the score
                 score += reward
                 # Update our Q-table with our Q-function
-                print(state,action)
+                print(Qtable)
                 Qtable[state, action] = (1 - self.learning_rate) * Qtable[state, action] \
                     + self.learning_rate * (reward + self.gamma * np.max(Qtable[next_state,:]))
                 # Set the next state as the current state
