@@ -8,9 +8,6 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 
-import tangrai
-
-env=gym.make('TangrAI-v0')
 
 class DQNAgent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
@@ -66,6 +63,12 @@ class DQNAgent():
         minibatch = random.sample(
             self.memory, min(len(self.memory), batch_size))
         for state, action, reward, next_state, done in minibatch:
+            state =  state.flatten()
+            state=np.reshape(state,(1,100))
+            
+            next_state =  next_state.flatten()
+            next_state=np.reshape(next_state,(1,100))
+            
             y_target = self.model.predict(state)
             y_target[0][action] = reward if done else reward + self.gamma * np.max(self.model.predict(next_state)[0])
             x_batch.append(state[0])
@@ -76,58 +79,54 @@ class DQNAgent():
             self.epsilon *= self.epsilon_decay
             
     def train(self):
-        state_space=self.env.observation_space.n
-        action_space=self.env.action_space.n
-        Qtable=np.zeros((state_space,action_space))
+#        state_space=self.env.observation_space.n
         
         for episode in range(self.episodes):
             state=self.env.reset()
+            
             done=False
             score=0
             for _ in range (self.env._max_episode_steps):
-                # With the probability of (1 - epsilon) take the best action in our Q-table
-                if random.uniform(0, 1) > self.epsilon:
-                    action = np.argmax(Qtable[state, :])
-                # Else take a random action
-                else:
-                    action = self.env.action_space.sample()
-                    print('action',action)
+                action_space=self.act(state)
+                print('Action:',action_space)
+                next_state, reward, done, _ = self.env.step(action_space)
+                
+                self.remember(state, action_space, reward, next_state, done)
+                
+                self.replay(self.batch_size)
+                
                 # Step the game forward
-                next_state, reward, done, _ = self.env.step(action)
+                
                 print('next_state',next_state)
                 print('reward',reward)
                 print('done',done)
                 # Add up the score
                 score += reward
-                # Update our Q-table with our Q-function
-                print(Qtable)
-                Qtable[state, action] = (1 - self.learning_rate) * Qtable[state, action] \
-                    + self.learning_rate * (reward + self.gamma * np.max(Qtable[next_state,:]))
-                # Set the next state as the current state
+                
                 state = next_state
                 if done:
                     break
    
 
-             
-agent= DQNAgent(env_id='TangrAI-v0', 
-                path='model/', 
-                episodes=1000, 
-                max_env_steps=10, 
-                win_threshold=None, 
-                epsilon_decay=1,
-                state_size=None, 
-                action_size=None, 
-                epsilon=1.0, 
-                epsilon_min=0.01, 
-                gamma=1, 
-                learning_rate=.001, 
-                alpha_decay=.01, 
-                batch_size=16, 
-                prints=True)
-           
-
-agent.train()
+if __name__ == "__main__":           
+    agent= DQNAgent(env_id='TangrAI-v0', 
+                    path='model/', 
+                    episodes=1000, 
+                    max_env_steps=8, 
+                    win_threshold=None, 
+                    epsilon_decay=1,
+                    state_size=None, 
+                    action_size=None, 
+                    epsilon=1.0, 
+                    epsilon_min=0.01, 
+                    gamma=1, 
+                    learning_rate=.001, 
+                    alpha_decay=.01, 
+                    batch_size=16, 
+                    prints=True)
+               
+    
+    agent.train()
 
 
 

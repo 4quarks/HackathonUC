@@ -153,13 +153,13 @@ class GameState:
 #        pygame.display.update()
         
     def getActionSet(self):
-        return range(8)    
+        return range(7)    
     
     def getReward(self):
         counter_ones=0
-        for row in self.str_board:
+        for row in self.int_board:
             for value in row:
-                if value==blank:
+                if value==8:
                     counter_ones+=1
         return counter_ones
     
@@ -193,7 +193,6 @@ class GameState:
     
     def addToBoard(self,shape):
         self.currentPiece = self.getNewPiece(shape)
-        print('Current Piece',self.currentPiece)
         if self.isValidPosition()==True:
             for row in range(templeteWidth):
                 for column in range(templeteHeigh):
@@ -202,7 +201,6 @@ class GameState:
                             self.board[row+self.currentPiece['x']][column+self.currentPiece['y']]=self.currentPiece['color']
                         except:
                             pass
-            print(self.board)
      
     def getBlankBoard(self):
         self.board = []
@@ -217,7 +215,6 @@ class GameState:
     def piecetoMatrix(self):
         self.piece_array=[]
         for column in range(templeteHeigh):
-            print(pieces[self.currentPiece['shape']][self.currentPiece['rotation']][column])
             for value in pieces[self.currentPiece['shape']][self.currentPiece['rotation']][column]:
                 if value ==blank:
                     self.piece_array=np.append(self.piece_array,1)
@@ -237,17 +234,31 @@ class GameState:
                     self.str_board=np.append(self.str_board,full)
                     
         self.str_board=np.reshape(self.str_board,(templeteWidth,templeteHeigh))
-        return self.str_board           
-
+        return self.str_board     
+      
+    def convertToIntBoard(self):
+        self.int_board=[]
+        for row in range(templeteWidth):
+            for column in range(templeteHeigh):
+                if self.board[row,column]==blank:
+                    self.int_board=np.append(self.int_board,int(8))
+                else:
+                    self.int_board=np.append(self.int_board,int(self.board[row,column]))
+                    
+        self.int_board=np.reshape(self.int_board,(templeteWidth,templeteHeigh))
+        return self.int_board  
+    
     def frame_step(self,action):
         done=False
         if action==7:
             board=self.getBlankBoard()
+            self.convertToIntBoard()
+            board=self.int_board
             done=True
         else:
             self.addToBoard(list(pieces)[action])
-            self.convertToStrBoard()
-            board=self.str_board
+            self.convertToIntBoard()
+            board=self.int_board
         
         reward=self.getReward()
         
@@ -257,6 +268,5 @@ class GameState:
 #if __name__ == "__main__":
 #    print('inici')
 #    gamestate =  GameState()
-#    gamestate.frame_step()
-#    print(gamestate.convertToStrBoard())
+#    gamestate.frame_step(1)
 #    print(gamestate.getReward())

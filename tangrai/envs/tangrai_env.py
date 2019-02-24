@@ -21,11 +21,9 @@ class tangraiENV(gym.Env):
     
     @property
     def _n_actions(self):
-        return len(self._action_set)
+        return self._action_set
     
     def _reset(self):
-        do_nothing = np.zeros(len(self._action_set))
-        do_nothing[0] = 1
         self.observation_space = spaces.Box(low=0, high=255, shape=(screenHeight, screenWidth, 3))
         state, _, _= self.game_state.frame_step(7)
         return state
