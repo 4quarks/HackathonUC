@@ -131,12 +131,6 @@ pieces = {'A': A,
           'G': G}
 
 
-shape='A'
-rotation=0
-color=0
-
-x_Position=6
-y_Position=2
 
 class GameState:
     global FPSclock, displayWindow, basicFont, bigFont
@@ -150,16 +144,12 @@ class GameState:
 #        pygame.display.set_caption('TangrAI') 
         
         self.board = self.getBlankBoard()
-        self.currentPiece = self.getNewPiece()
-        self.nextPiece = self.getNewPiece()
-
+        self.currentPiece = None
 #        pygame.display.update()
         
     def reinit(self):
         self.board = self.getBlankBoard()
-        self.currentPiece = self.getNewPiece()
-        self.nextPiece = self.getNewPiece()
-
+        self.currentPiece = None
 #        pygame.display.update()
         
     def getActionSet(self):
@@ -181,23 +171,40 @@ class GameState:
         shape = random.choice(list(pieces.keys()))
         newPiece = {'shape': shape,
                     'rotation': random.randint(0, len(pieces[shape]) - 1),
-                    'x': int(boardWidth / 2) - int(templeteWidth / 2),
-                    'y': 0, # start it above the self.board (i.e. less than 0)
+                    'x': random.randint(0, len(pieces[shape][0][0]) - 1),
+                    'y': random.randint(0, len(pieces[shape][0][0]) - 1), # start it above the self.board (i.e. less than 0)
                     'color': random.randint(0, len(colors)-1)}
         return newPiece
     
-    def addToBoard(self):
-        isOnBoard=True
-        global original_board
+    def isValidPosition(self):
+        print('GO')
+        valid = True
+        
         for row in range(templeteWidth):
-            for column in range(templeteHeigh):
-                if pieces[self.currentPiece['shape']][self.currentPiece['rotation']][row][column]!=blank:
-                    try:
-                        self.board[row+self.currentPiece['x']][column+self.currentPiece['y']]=self.currentPiece['color']
-                    except:
-                        isOnBoard=False
-                        
-        return isOnBoard
+                for column in range(templeteHeigh):
+                    if pieces[self.currentPiece['shape']][self.currentPiece['rotation']][row][column] == full:
+                        if self.currentPiece['x']+row > templeteWidth-1 or self.currentPiece['y']+column > templeteHeigh-1:
+                            valid = False
+                        else:
+                            if valid:
+                                if self.board[self.currentPiece['x']+row][self.currentPiece['y']+column]==blank:
+                                    valid = True
+                                else:
+                                    valid = False   
+        print(valid)
+        return valid     
+    
+    def addToBoard(self):
+        self.currentPiece = self.getNewPiece()
+        if self.isValidPosition()==True:
+            for row in range(templeteWidth):
+                for column in range(templeteHeigh):
+                    if pieces[self.currentPiece['shape']][self.currentPiece['rotation']][row][column]!=blank:
+                        try:
+                            self.board[row+self.currentPiece['x']][column+self.currentPiece['y']]=self.currentPiece['color']
+                        except:
+                            pass
+            print(self.board)
      
     def getBlankBoard(self):
         self.board = []
@@ -220,29 +227,13 @@ class GameState:
                     self.piece_array=np.append(self.piece_array,self.currentPiece['color'])
                     
         self.piece_array=np.reshape(self.piece_array,(templeteWidth,templeteHeigh))
-        return self.piece_array
-    
-    def isValidPosition(self):
-        valid = True
-        peca_nova= piecetoMatrix()
-        for row in range(len(pieces[self.currentPiece['shape']][self.currentPiece['rotation']][0])):
-                for column in range(len(pieces[self.currentPiece['shape']][self.currentPiece['rotation']][0])):
-                    if peca_nova[row][column] == self.currentPiece['color']:
-                        if self.currentPiece['x']+row > 4 or self.currentPiece['y']+column > 4:
-                            valid = False
-                        else:
-                            if valid:
-                                if self.board[self.currentPiece['x']+row][self.currentPiece['y']+column]==1:
-                                    valid = True
-                                else:
-                                    valid = False    
-        return valid           
+        return self.piece_array         
     
     def convertToStrBoard(self):
         self.new_board=[]
         for row in range(templeteWidth):
             for column in range(templeteHeigh):
-                if board[row,column]==1:
+                if self.board[row,column]==blank:
                     self.new_board=np.append(self.new_board,blank)
                 else:
                     self.new_board=np.append(self.new_board,full)
@@ -251,3 +242,13 @@ class GameState:
         return self.new_board           
 
 
+
+if __name__ == "__main__":
+    print('inici')
+    gamestate =  GameState()
+    print(gamestate.currentPiece)
+    gamestate.addToBoard()
+    print(gamestate.convertToStrBoard())
+    
+    
+    
