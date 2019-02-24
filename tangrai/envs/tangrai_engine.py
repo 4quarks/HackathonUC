@@ -146,29 +146,27 @@ class GameState:
         self.board = self.getBlankBoard()
         self.currentPiece = None
 #        pygame.display.update()
-        
+        self.str_board=[]
     def reinit(self):
         self.board = self.getBlankBoard()
         self.currentPiece = None
 #        pygame.display.update()
         
     def getActionSet(self):
-        return range(4)    
+        return range(7)    
     
     def getReward(self):
-        self.counter_ones=0
-        for row in self.board:
+        counter_ones=0
+        for row in self.str_board:
             for value in row:
-                if value==1:
-                    self.counter_ones+=1
-        return self.counter_ones
+                if value==blank:
+                    counter_ones+=1
+        return counter_ones
     
     def isGameOver(self):
         return self.currentPiece == None and not self.isValidPosition()   
     
-    def getNewPiece(self):
-        # return a random new piece in a random rotation and color
-        shape = random.choice(list(pieces.keys()))
+    def getNewPiece(self,shape):
         newPiece = {'shape': shape,
                     'rotation': random.randint(0, len(pieces[shape]) - 1),
                     'x': random.randint(0, len(pieces[shape][0][0]) - 1),
@@ -177,7 +175,6 @@ class GameState:
         return newPiece
     
     def isValidPosition(self):
-        print('GO')
         valid = True
         
         for row in range(templeteWidth):
@@ -194,8 +191,9 @@ class GameState:
         print(valid)
         return valid     
     
-    def addToBoard(self):
-        self.currentPiece = self.getNewPiece()
+    def addToBoard(self,shape):
+        self.currentPiece = self.getNewPiece(shape)
+        print(self.currentPiece)
         if self.isValidPosition()==True:
             for row in range(templeteWidth):
                 for column in range(templeteHeigh):
@@ -230,25 +228,31 @@ class GameState:
         return self.piece_array         
     
     def convertToStrBoard(self):
-        self.new_board=[]
+        self.str_board=[]
         for row in range(templeteWidth):
             for column in range(templeteHeigh):
                 if self.board[row,column]==blank:
-                    self.new_board=np.append(self.new_board,blank)
+                    self.str_board=np.append(self.str_board,blank)
                 else:
-                    self.new_board=np.append(self.new_board,full)
+                    self.str_board=np.append(self.str_board,full)
                     
-        self.new_board=np.reshape(self.new_board,(templeteWidth,templeteHeigh))
-        return self.new_board           
+        self.str_board=np.reshape(self.str_board,(templeteWidth,templeteHeigh))
+        return self.str_board           
 
+    def frame_step(self):
+        done=False
+        for piece in pieces:
+            self.addToBoard(piece)
+        
+        reward=self.getReward()
+        board=self.str_board
+        done=True
+        
+        return board, reward, done
 
-
-if __name__ == "__main__":
-    print('inici')
-    gamestate =  GameState()
-    print(gamestate.currentPiece)
-    gamestate.addToBoard()
-    print(gamestate.convertToStrBoard())
-    
-    
-    
+#if __name__ == "__main__":
+#    print('inici')
+#    gamestate =  GameState()
+#    gamestate.frame_step()
+#    print(gamestate.convertToStrBoard())
+#    print(gamestate.getReward())

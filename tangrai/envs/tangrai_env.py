@@ -11,13 +11,14 @@ class tangraiENV(gym.Env):
         self.game_state = game.GameState()
         self._action_set = self.game_state.getActionSet()
         self.action_space = spaces.Discrete(len(self._action_set))
+        self.observation_space = spaces.Box(low=0, high=255, shape=(screenHeight, screenWidth, 3))
         
     def _step(self, a):
         self._action_set = np.zeros([len(self._action_set)])
         self._action_set[a] = 1
         reward = 0.0
-        state, reward, terminal = self.game_state.frame_step(self._action_set)
-        return state, reward, terminal, {}
+        state, reward, done = self.game_state.frame_step(self._action_set)
+        return state, reward, done, {}
     
     @property
     def _n_actions(self):
