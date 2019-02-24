@@ -7,7 +7,10 @@ from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
- 
+
+import tangrai
+
+env=gym.make('TangrAI-v0')
 
 class DQNAgent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
@@ -15,7 +18,6 @@ class DQNAgent():
                  gamma=1, learning_rate=.001, alpha_decay=.01, batch_size=16, prints=False):
         self.memory = deque(maxlen=100000)
         self.env = gym.make(env_id)
- 
         if state_size is None: 
             self.state_size = self.env.observation_space.n 
         else: 
@@ -48,7 +50,7 @@ class DQNAgent():
         model.add(Dense(48, activation='tanh'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse',
-                      optimizer=Adam(lr=self.alpha, decay=self.alpha_decay))
+                      optimizer=Adam(lr=self.learning_rate, decay=self.alpha_decay))
         return model
     
     def act(self, state):
@@ -82,7 +84,7 @@ class DQNAgent():
             state=self.env.reset()
             done=False
             score=0
-            for _ in range (self._max_episode_steps):
+            for _ in range (self.env._max_episode_steps):
                 # With the probability of (1 - epsilon) take the best action in our Q-table
                 if random.uniform(0, 1) > self.epsilon:
                     action = np.argmax(Qtable[state, :])
@@ -94,6 +96,7 @@ class DQNAgent():
                 # Add up the score
                 score += reward
                 # Update our Q-table with our Q-function
+                print(state,action)
                 Qtable[state, action] = (1 - self.learning_rate) * Qtable[state, action] \
                     + self.learning_rate * (reward + self.gamma * np.max(Qtable[next_state,:]))
                 # Set the next state as the current state
@@ -106,7 +109,7 @@ class DQNAgent():
 agent= DQNAgent(env_id='TangrAI-v0', 
                 path='model/', 
                 episodes=1000, 
-                max_env_steps=None, 
+                max_env_steps=10, 
                 win_threshold=None, 
                 epsilon_decay=1,
                 state_size=None, 
