@@ -4,11 +4,11 @@ import random
 import gym
 import numpy as np
 from collections import deque
-
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
  
+
 class DQNAgent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
                  state_size=None, action_size=None, epsilon=1.0, epsilon_min=0.01, 
@@ -102,14 +102,13 @@ class DQNAgent():
                     break
    
 
-
              
 agent= DQNAgent(env_id='TangrAI-v0', 
-                path, 
-                episodes, 
-                max_env_steps, 
-                win_threshold, 
-                epsilon_decay,
+                path='model/', 
+                episodes=1000, 
+                max_env_steps=None, 
+                win_threshold=None, 
+                epsilon_decay=1,
                 state_size=None, 
                 action_size=None, 
                 epsilon=1.0, 
@@ -118,10 +117,10 @@ agent= DQNAgent(env_id='TangrAI-v0',
                 learning_rate=.001, 
                 alpha_decay=.01, 
                 batch_size=16, 
-                prints=False)
+                prints=True)
            
 
-
+agent.train()
 
 
 
