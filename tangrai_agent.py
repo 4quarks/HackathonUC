@@ -84,35 +84,37 @@ class DQNAgent():
         for episode in range(self.episodes):
             state=self.env.reset()
             
-            done=False
+            done=True
+            counter_steps=0
             score=0
+            print('######')
             for _ in range (self.env._max_episode_steps):
                 action_space=self.act(state)
-                print('Action:',action_space)
                 next_state, reward, done, _ = self.env.step(action_space)
                 
                 self.remember(state, action_space, reward, next_state, done)
                 
                 self.replay(self.batch_size)
+
                 
-                # Step the game forward
-                
-                print('next_state',next_state)
-                print('reward',reward)
-                print('done',done)
                 # Add up the score
+                counter_steps +=1
                 score += reward
-                
+                print(score)
                 state = next_state
-                if done:
+                if counter_steps==7:
+                    done=True
                     break
-   
+                else:
+                    done=False
+                    
+        self.model.save_weights('model/model_RL.h5')
 
 if __name__ == "__main__":           
     agent= DQNAgent(env_id='TangrAI-v0', 
                     path='model/', 
                     episodes=1000, 
-                    max_env_steps=8, 
+                    max_env_steps=7, 
                     win_threshold=None, 
                     epsilon_decay=1,
                     state_size=None, 

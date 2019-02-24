@@ -184,11 +184,11 @@ class GameState:
                             valid = False
                         else:
                             if valid:
-                                if self.board[self.currentPiece['x']+row][self.currentPiece['y']+column]==blank:
+                                if self.int_board[self.currentPiece['x']+row][self.currentPiece['y']+column]==8:
                                     valid = True
                                 else:
                                     valid = False   
-        print('Valid position to insert? ',valid)
+#        print('Valid position to insert? ',valid)
         return valid     
     
     def addToBoard(self,shape):
@@ -224,17 +224,17 @@ class GameState:
         self.piece_array=np.reshape(self.piece_array,(templeteWidth,templeteHeigh))
         return self.piece_array         
     
-    def convertToStrBoard(self):
-        self.str_board=[]
-        for row in range(templeteWidth):
-            for column in range(templeteHeigh):
-                if self.board[row,column]==blank:
-                    self.str_board=np.append(self.str_board,blank)
-                else:
-                    self.str_board=np.append(self.str_board,full)
-                    
-        self.str_board=np.reshape(self.str_board,(templeteWidth,templeteHeigh))
-        return self.str_board     
+#    def convertToStrBoard(self):
+#        self.str_board=[]
+#        for row in range(templeteWidth):
+#            for column in range(templeteHeigh):
+#                if self.board[row,column]==blank:
+#                    self.str_board=np.append(self.str_board,blank)
+#                else:
+#                    self.str_board=np.append(self.str_board,full)
+#                    
+#        self.str_board=np.reshape(self.str_board,(templeteWidth,templeteHeigh))
+#        return self.str_board     
       
     def convertToIntBoard(self):
         self.int_board=[]
