@@ -7,44 +7,11 @@ from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-import keras
 import time
 import matplotlib.pyplot as plt
-import tkinter
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from tangrai import __init__
-        
+from tangrai import __init__ as aaaaa
 
-class App():
-    def __init__(self,root,board):
-        self.board=board
-        self.newState(root,board)
-    def newState(self,root,board):
-        self.board=board
-        frame = tkinter.Frame(root)
-        
-        fig = Figure()
-        ax = fig.add_subplot(111)
-        ax.clear()
-        img=ax.imshow(board)
-        img.set_cmap('hot')
-        ax.axis('off')
-        self.canvas = FigureCanvasTkAgg(fig,master=root)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
-        frame.pack()
-        
-#board=np.ones((10,10))
-#board2=np.random.rand(10,10)
-#
-#root = tkinter.Tk()
-#app = App(board2)
-#app.newState(board)
-#app.newState(board2)
-#root.mainloop()      
-
-class DQNAgent():
+class Agent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
                  state_size=None, action_size=None, epsilon=1.0, epsilon_min=0.01, 
                  gamma=1.0, learning_rate=.001, alpha_decay=.01, batch_size=16, prints=False):
@@ -73,26 +40,28 @@ class DQNAgent():
         self.prints = prints                 #if true, the agent will print his scores
         self.learning_rate=learning_rate
         self.model = self.NN_model()        
+        self.mse_list=[]
         
     def NN_model(self):
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(48, activation='relu'))
-        model.add(Dense(self.action_size, activation='relu'))
+        model.add(Dense(256, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(128, activation='relu')) 
+        model.add(Dense(64, activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(self.action_size, activation='softmax'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate, decay=self.alpha_decay),metrics=['mse'])
         return model
     
     def act(self, state):
         if(np.random.random() <= self.epsilon):
-#            print('Random')
             return self.env.action_space.sample()
         
         state =  state.flatten()
         state=np.reshape(state,(1,100))   
+        
 #        print(self.model.predict(state)) #Q-Table!!!!
-#        print('Q-Table')
-        return np.argmax(self.model.predict(state))
+        return np.argmax(self.model.predict(state)) #Returns the position XY of the next piece
     
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -107,87 +76,65 @@ class DQNAgent():
             next_state =  next_state.flatten()
             next_state=np.reshape(next_state,(1,100))
             
-#            print('Next state',next_state)
             y_target = self.model.predict(state)
             y_target[0][action] = reward if done else reward + self.gamma * np.max(self.model.predict(next_state)[0])
             x_batch.append(state[0])#
-#            print(y_target[0])
             y_batch.append(y_target[0])
             
         history=self.model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch),verbose=0)
-        print('MSE:',history.history['mean_squared_error'])
+
+        self.mse_list=np.append(self.mse_list,history.history['mean_squared_error'])
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
                 
     def train(self):
-#        state_space=self.env.observation_space.n
-        #root = tkinter.Tk()
-        scores=[]
-        for episode in range(self.episodes):
-            state=self.env.reset()
-#            app = App(root,state)
+        for episode in range(self.episodes): # Number of desired episodes
+            state=self.env.reset() #Empty the board and score
             done=False
             counter_steps=0
             score=0
-            print('### New episode ###')
-            rewards=[]
-            for _ in range (self.env._max_episode_steps):
-                action_space=self.act(state)
+            if episode % 10==True:
+                print('EPISODE',episode)
+                print('Mean MSE',np.mean(self.mse_list))
                 
-                next_state, reward, done,_ = self.env.step(action_space)
+            for _ in range (self.env._max_episode_steps): #Number of movements = pieces = 7
+                action_space=self.act(state) # Returns the XY of the next piece
+                next_state, reward, done,_ = self.env.step(action_space) #Movement-> reward 
+                self.remember(state, action_space, reward, next_state, done) #Save the results
+                self.replay(self.batch_size) #Fit the model using old results
                 
-                self.remember(state, action_space, reward, next_state, done)
-
-                self.replay(self.batch_size) #Only train
-                
-                # Add up the score               
-                score += reward
-#                print('State',state)
-#                print('NextState',next_state)
-                rewards=np.append(rewards,reward)
+                score += reward # Add up the score  
                 state = next_state
-                #app.newState(root,state)
 
-                plt.imshow(state)
-                plt.show()
-                
-                print('Reward',reward)
-                print('Score',score)
+#                plt.imshow(state)
+#                plt.show()
                 
                 if counter_steps==6:
                     done=True 
-#                    print('All rewards',rewards)
-                    scores=np.append(scores,score)
-#                    self.remember(state, action_space, reward, next_state, done)
-#                    self.replay(self.batch_size)
-                    Gt=0
-                    for score_i in scores: 
-                        Gt+=self.gamma**counter_steps*score_i
-                    next_score=max(scores)+self.learning_rate*(Gt-max(scores))
                     break                
                 else:
                     done=False
                     
                 counter_steps +=1   
-        #root.mainloop()              
         self.model.save_weights('model/model_RL.h5')
 
 
 
 if __name__ == "__main__":           
-    agent= DQNAgent(env_id='TangrAI-v0', 
+    agent= Agent(env_id='TangrAI-v0', 
                     path='model/', 
-                    episodes=50000, 
+                    episodes=5000,  
                     max_env_steps=7, 
                     win_threshold=None, 
-                    epsilon_decay=1,
+                    epsilon_decay=1,#Effect a lot to the model
                     state_size=None, 
                     action_size=None, 
-                    epsilon=0.6, 
+                    epsilon=0.8, 
                     epsilon_min=0.01, 
                     gamma=0.8, 
+
                     learning_rate=.001, 
-                    alpha_decay=.01, 
+                    alpha_decay=0.1, 
                     batch_size=4, 
                     prints=True)
                
@@ -197,6 +144,4 @@ if __name__ == "__main__":
 
 
 
-#root = tkinter.Tk()
-#app = App(root,board)
 
