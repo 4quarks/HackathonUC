@@ -10,6 +10,8 @@ from keras.optimizers import Adam
 import time
 import matplotlib.pyplot as plt
 from tangrai import __init__ as aaaaa
+import copy 
+
 
 class Agent():
     def __init__(self, env_id, path, episodes, max_env_steps, win_threshold, epsilon_decay,
@@ -44,10 +46,10 @@ class Agent():
         
     def NN_model(self):
         model = Sequential()
-        model.add(Dense(256, input_dim=self.state_size, activation='relu'))
-        model.add(Dense(128, activation='relu')) 
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))
+        model.add(Dense(256*2, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(128*2, activation='relu')) 
+        model.add(Dense(64*2, activation='relu'))
+        model.add(Dense(32*2, activation='relu'))
         model.add(Dense(self.action_size, activation='softmax'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate, decay=self.alpha_decay),metrics=['mse'])
@@ -57,28 +59,20 @@ class Agent():
         if(np.random.random() <= self.epsilon):
             return self.env.action_space.sample()
         
-        state =  state.flatten()
-        state=np.reshape(state,(1,100))   
-        
 #        print(self.model.predict(state)) #Q-Table!!!!
         return np.argmax(self.model.predict(state)) #Returns the position XY of the next piece
     
-    def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))
+    def remember(self, state,action, reward, next_state, done):
+        self.memory.append((state,action, reward, next_state, done))
         
     def replay(self, batch_size):
         x_batch, y_batch = [], []
         minibatch = random.sample(self.memory, min(len(self.memory), batch_size)) #select random samples in batchsize
         for state, action, reward, next_state, done in minibatch:
-            state =  state.flatten()
-            state=np.reshape(state,(1,100))
-            
-            next_state =  next_state.flatten()
-            next_state=np.reshape(next_state,(1,100))
             
             y_target = self.model.predict(state)
             y_target[0][action] = reward if done else reward + self.gamma * np.max(self.model.predict(next_state)[0])
-            x_batch.append(state[0])#
+            x_batch.append(state[0])
             y_batch.append(y_target[0])
             
         history=self.model.fit(np.array(x_batch), np.array(y_batch), batch_size=len(x_batch),verbose=0)
@@ -105,10 +99,24 @@ class Agent():
                 
                 score += reward # Add up the score  
                 state = next_state
-
-#                plt.imshow(state)
-#                plt.show()
                 
+#                #Uncomment this to see the plots
+#                board_=copy.deepcopy(state)
+#                board_=np.reshape(board_,(20,10))
+#                plt.imshow(board_)
+#                plt.show()
+#                #Board and Piece in different plot
+#                print('#'*10)
+#                plt.figure()
+#                plt.title('Board')
+#                plt.imshow(board_[:10])
+#                plt.show()
+#                plt.figure()
+#                plt.title('Piece')
+#                plt.imshow(board_[10:21])
+#                plt.show()      
+                
+                      
                 if counter_steps==6:
                     done=True 
                     break                

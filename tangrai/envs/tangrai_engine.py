@@ -135,7 +135,6 @@ colors={'A': 1,
           'G': 7}
 
 class GameState:
-    global FPSclock, displayWindow, basicFont, bigFont
     def __init__(self):
        
         self.board = self.getBlankBoard()
@@ -234,31 +233,57 @@ class GameState:
         self.int_board=np.reshape(self.int_board,(templeteWidth,templeteHeigh))
         return self.int_board  
     
+    def convertToIntPiece(self,board):
+        int_board=[]
+        for row in board:
+            for column in row:
+                if column==blank:
+                    int_board=np.append(int_board,8)
+                else:
+                    int_board=np.append(int_board,self.currentPiece['color'])
+                    
+        int_board=np.reshape(int_board,(templeteWidth,templeteHeigh))
+        return int_board  
+    
+    def convertPieceToNumpy(self):
+        piece_np=[]
+        if self.step<6:
+            for row in pieces[list(pieces)[self.step+1]][0]:
+                for column in row:
+                    piece_np=np.append(piece_np,column)
+            piece_np=np.reshape(piece_np,(10,10))
+        else:
+            for row in pieces[list(pieces)[0]][0]:
+                for column in row:
+                    piece_np=np.append(piece_np,column)
+            piece_np=np.reshape(piece_np,(10,10))            
+        return piece_np
+    
+    def boardToVector(self,board, piece):
+        board =  board.flatten()
+        board=np.reshape(board,(1,100))
+        piece =  piece.flatten()
+        piece=np.reshape(piece,(1,100))        
+        state=np.concatenate((board, piece), axis=1)
+        return state
+    
     def frame_step(self,action):
         done=False
-        if action==100:
+        if action==100: #Restart-->Empty board and piece
             self.step=0
             board=self.getBlankBoard()
             self.convertToIntBoard()
             board=self.int_board
-            done=True
-            reward=None
+            state=self.boardToVector(board,board)
             
-        elif self.step==6:
-            if len(str(action))==1: #07 is given as 7
-                x=0
-                y=str(action)[0]            
-            else:
-                x=str(action)[0]
-                y=str(action)[1]
-            self.currentPiece = self.predictedPiece(list(pieces)[self.step],x,y) #Put the piece on the desired place
             
-            reward=self.addToBoard(list(pieces)[self.step])
-            self.convertToIntBoard()
-            board=self.int_board   
             done=True
-
-        else:
+            return state
+        
+        else :
+            if self.step==6:
+                done=True
+                        
             if len(str(action))==1:
                 x=0
                 y=str(action)[0]            
@@ -271,9 +296,13 @@ class GameState:
             self.convertToIntBoard()
             board=self.int_board
 
-                
+            piece_np=self.convertPieceToNumpy()
+            piece=self.convertToIntPiece(piece_np)
+            
+            state=self.boardToVector(board,piece)
+            
             self.step+=1
-        return board, reward, done
+            return state, reward, done
 
 #if __name__ == "__main__":
 #    print('inici')
