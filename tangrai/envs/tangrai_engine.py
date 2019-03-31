@@ -95,6 +95,7 @@ pieces = {'A': A,
           'F': F,
           'G': G}
 
+color_board=8
 colors={'A': 1,
           'B': 2,
           'C': 3,
@@ -112,13 +113,20 @@ class GameState:
         self.score = 0
                 
     def getActionSet(self):
-        return range(boardWidth*boardHeigh)    
+        return range(boardWidth*boardHeigh)  
+    
+    def getBlankBoard(self):
+        self.board = []
+        for i in range(boardWidth):
+            self.board=np.append(self.board,[blank] * boardWidth)
+        self.board=np.reshape(self.board,(boardWidth,boardHeigh))
+        return self.board    
     
     def getReward(self,valid=True):
         counter_ones=0
         for row in self.int_board:
             for value in row:
-                if value!=8:
+                if value!=color_board:
                     counter_ones+=1
         if valid:
             self.score=self.score+10 #useful to display results
@@ -144,7 +152,7 @@ class GameState:
                             valid = False
                         else:
                             if valid:
-                                if self.int_board[self.currentPiece['x']+row][self.currentPiece['y']+column]==8:
+                                if self.int_board[self.currentPiece['x']+row][self.currentPiece['y']+column]==color_board:
                                     valid = True
                                 else:
                                     valid = False   
@@ -163,19 +171,14 @@ class GameState:
         else:
             return self.getReward(valid=False)     
                 
-    def getBlankBoard(self):
-        self.board = []
-        for i in range(boardWidth):
-            self.board=np.append(self.board,[blank] * boardWidth)
-        self.board=np.reshape(self.board,(boardWidth,boardHeigh))
-        return self.board
+
           
     def convertToIntBoard(self):
         self.int_board=[]
         for row in range(boardWidth):
             for column in range(boardHeigh):
                 if self.board[row,column]==blank:
-                    self.int_board=np.append(self.int_board,int(8))
+                    self.int_board=np.append(self.int_board,int(color_board))
                 else:
                     self.int_board=np.append(self.int_board,int(self.board[row,column]))
                     
@@ -187,7 +190,7 @@ class GameState:
         for row in board:
             for column in row:
                 if column==blank:
-                    int_board=np.append(int_board,8)
+                    int_board=np.append(int_board,color_board)
                 else:
                     int_board=np.append(int_board,self.currentPiece['color'])
                     
@@ -200,19 +203,19 @@ class GameState:
             for row in pieces[list(pieces)[self.step+1]][0]:
                 for column in row:
                     piece_np=np.append(piece_np,column)
-            piece_np=np.reshape(piece_np,(10,10))
+            piece_np=np.reshape(piece_np,(boardWidth,boardHeigh))
         else:
             for row in pieces[list(pieces)[0]][0]:
                 for column in row:
                     piece_np=np.append(piece_np,column)
-            piece_np=np.reshape(piece_np,(10,10))            
+            piece_np=np.reshape(piece_np,(boardWidth,boardHeigh))            
         return piece_np
     
     def boardToVector(self,board, piece):
         board =  board.flatten()
-        board=np.reshape(board,(1,100))
+        board=np.reshape(board,(1,boardWidth*boardHeigh))
         piece =  piece.flatten()
-        piece=np.reshape(piece,(1,100))        
+        piece=np.reshape(piece,(1,boardWidth*boardHeigh))        
         state=np.concatenate((board, piece), axis=1)
         return state
     
@@ -223,9 +226,7 @@ class GameState:
             board=self.getBlankBoard()
             self.convertToIntBoard()
             board=self.int_board
-            state=self.boardToVector(board,board)
-            
-            
+            state=self.boardToVector(board,board)    
             done=True
             return state
         

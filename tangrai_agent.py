@@ -58,7 +58,6 @@ class Agent():
     def act(self, state):
         if(np.random.random() <= self.epsilon):
             return self.env.action_space.sample()
-        
 #        print(self.model.predict(state)) #Q-Table!!!!
         return np.argmax(self.model.predict(state)) #Returns the position XY of the next piece
     
